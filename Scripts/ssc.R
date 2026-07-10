@@ -202,3 +202,47 @@ ssc_overall <- SS %>%
        y = "Frequency") +
   theme_classic() +
   theme(legend.position = "none")
+
+
+ssc_overall_notreatment <- SS %>% 
+  filter(!is.na(ssc)) %>%
+  ggplot(aes(x = ssc, fill = factor(t_number))) +
+  geom_histogram(binwidth = 0.25,
+                 color = "white") +
+  facet_wrap(~ t_name) +
+  scale_fill_manual(
+    name = "Treatment",
+    labels = c("2" = "Gravity",
+               "3" = "Vacuum",
+               "4" = "Sugar Control"),
+    values = c("2" = "#1E90FF",
+               "3" = "#004080",
+               "4" = "#9B59B6")
+  ) +
+  labs(title = "SSC Overall 2024-2026",
+       x = "Soluble sugar concentration (°Brix)",
+       y = "Frequency") +
+  theme_classic() +
+  theme(legend.position = "none")
+
+
+ssc_overall_stacked <- SS %>% 
+  filter(!is.na(ssc)) %>%
+  ggplot(aes(x = ssc, fill = factor(t_number))) +
+  geom_histogram(binwidth = 0.25,
+                 color = "white",
+                 alpha = 0.5,
+                 position = "identity") +
+  scale_fill_manual(
+    labels = c("2" = "Gravity",
+               "3" = "Vacuum",
+               "4" = "Sugar Control"),
+    values = c("2" = "#1E90FF",
+               "3" = "#004080",
+               "4" = "#9B59B6")
+  ) +
+  labs(title = "SSC Overall 2024-2026",
+        fill = "Treatment type",
+       x = "Soluble sugar concentration (°Brix)",
+       y = "Frequency") +
+  theme_classic()
