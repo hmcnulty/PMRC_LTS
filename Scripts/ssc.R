@@ -247,30 +247,7 @@ ssc_overall_stacked <- SS %>%
        y = "Frequency") +
   theme_classic()
 
-SS %>%
-  filter(!is.na(ssc)) %>%
-  mutate(t_number = factor(t_number, levels = c(2, 3, 4))) %>%
-  ggplot(aes(x = ssc, color = t_number)) +
-  geom_density(linewidth = 1.2) +
-  scale_color_manual(
-    values = c(
-      "2" = "#1E90FF",
-      "3" = "#004080",
-      "4" = "#9B59B6"
-    ),
-    labels = c(
-      "2" = "Gravity",
-      "3" = "Vacuum",
-      "4" = "Sugar Control"
-    ),
-    name = "Treatment type"
-  ) +
-  labs(
-    title = "SSC Overall 2024–2026",
-    x = "Soluble sugar concentration (°Brix)",
-    y = "Density"
-  ) +
-  theme_classic()
+
 
 library(dplyr)
 library(tidyr)
@@ -313,11 +290,72 @@ ggplot(curves, aes(x = x, y = y, color = factor(t_number))) +
   labs(
     title = "Average SSC 2024-2026",
     x = "Sap sugar concentration (°Brix)",
-    y = "Density") +
+    y = "Frequency") +
   geom_text(
     data = mean_points,
     aes(x = mean, y = y, label = round(mean, 2)),
     vjust = -0.8,
     hjust = -1,
     show.legend = FALSE) +
+  theme_classic()
+
+
+
+
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+binwidth <- 0.25
+
+# Summary statistics by treatment
+stats <- SS %>%
+  filter(!is.na(ssc)) %>%
+  group_by(t_number) %>%
+  summarise(
+    mean = mean(ssc),
+    sd = sd(ssc),
+    n = n(),
+    .groups = "drop"
+  )
+
+# Create normal curves
+curve_df <- stats %>%
+  rowwise() %>%
+  do({
+    tibble(
+      t_number = .$t_number,
+      x = seq(min(SS$ssc, na.rm = TRUE),
+              max(SS$ssc, na.rm = TRUE),
+              length.out = 200),
+      y = dnorm(x, mean = .$mean, sd = .$sd) * .$n * binwidth
+    )
+  })
+
+# Mean points
+mean_df <- stats %>%
+  mutate(y = dnorm(mean, mean = mean, sd = sd) * n * binwidth)
+
+ggplot(curve_df, aes(x = x, y = y, color = factor(t_number))) +
+  geom_line(linewidth = 1.2) +
+  geom_point(
+    data = mean_df,
+    aes(x = mean, y = y, color = factor(t_number)),
+    size = 4) +
+  scale_color_manual(labels = c(
+    "2" = "Gravity 2.05",
+    "3" = "Vacuum 1.83",
+    "4" = "Sugar Control 2.44"),
+    values = c(
+      "2" = "#1E90FF",
+      "3" = "#004080",
+      "4" = "#9B59B6")) +
+  labs(title = "SSC Overall 2024–2026",
+       color = "Treatment", 
+       x = "Sap sugar concentration (°Brix)",
+       y = "Frequency") +
+  scale_x_continuous( limits = c(0, 7), 
+                      breaks = seq(0, 7.5, by = 1)) +
+  scale_y_continuous( limits = c(0, 100), 
+                      breaks = seq(0, 100, by = 25)) +
   theme_classic()
