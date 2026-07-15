@@ -246,3 +246,78 @@ ssc_overall_stacked <- SS %>%
        x = "Soluble sugar concentration (°Brix)",
        y = "Frequency") +
   theme_classic()
+
+SS %>%
+  filter(!is.na(ssc)) %>%
+  mutate(t_number = factor(t_number, levels = c(2, 3, 4))) %>%
+  ggplot(aes(x = ssc, color = t_number)) +
+  geom_density(linewidth = 1.2) +
+  scale_color_manual(
+    values = c(
+      "2" = "#1E90FF",
+      "3" = "#004080",
+      "4" = "#9B59B6"
+    ),
+    labels = c(
+      "2" = "Gravity",
+      "3" = "Vacuum",
+      "4" = "Sugar Control"
+    ),
+    name = "Treatment type"
+  ) +
+  labs(
+    title = "SSC Overall 2024–2026",
+    x = "Soluble sugar concentration (°Brix)",
+    y = "Density"
+  ) +
+  theme_classic()
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+params <- SS %>%
+  filter(!is.na(ssc)) %>%
+  group_by(t_number) %>%
+  summarize(
+    mean = mean(ssc),
+    sd = sd(ssc),
+    .groups = "drop"
+  )
+
+curves <- params %>%
+  rowwise() %>%
+  mutate(x = list(seq(mean - 4 * sd, mean + 4 * sd, length.out = 200))) %>%
+  unnest(x) %>%
+  mutate(y = dnorm(x, mean, sd))
+
+mean_points <- params %>%
+  mutate(y = dnorm(mean, mean, sd))
+
+ggplot(curves, aes(x = x, y = y, color = factor(t_number))) +
+  geom_line(linewidth = 1.2) +
+  geom_point(
+    data = mean_points,
+    aes(x = mean, y = y),
+    size = 3) +
+  scale_color_manual(
+    values = c(
+      "2" = "#1E90FF",
+      "3" = "#004080",
+      "4" = "#9B59B6"),
+    labels = c(
+      "2" = "Gravity",
+      "3" = "Vacuum",
+      "4" = "Sugar Control"),
+    name = "Treatment type") +
+  labs(
+    title = "Average SSC 2024-2026",
+    x = "Sap sugar concentration (°Brix)",
+    y = "Density") +
+  geom_text(
+    data = mean_points,
+    aes(x = mean, y = y, label = round(mean, 2)),
+    vjust = -0.8,
+    hjust = -1,
+    show.legend = FALSE) +
+  theme_classic()
